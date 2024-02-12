@@ -1,0 +1,204 @@
+5 Feb 2023
+Abhijeet, Sravani, Kapali 
+-----------------------------------------
+1.Specify ground truth data collection , system config(without attacker and attcker), duration of collection and format of ground truth(KTIs and its units and data type for each KTI, format)
+  :example - CPU usage – percentage – float
+attacker -  
+	attck description - specify what is the  attacks are being intoduced to the system
+	attack implemntation
+	attack deployment
+	collect the ground truth for the attacker
+2.Methodology --> Research methodology on  CPS​
+
+	S0 – Have a working definition of trust scale that the algorithm shall use​
+ 		scales possible  --> binary, discrete  and continuous, relativistic scale​
+
+	S1 – There is a CPS​
+
+	S2 – well defined attacks on the identified CPS​
+
+	S3 – how do you collect normal state and attack state ground truths​
+
+	S4 –  Train the Algorithm to detect identified attacks on the identified CPS defined​
+
+	S5 – Create a reusable software using outcomes from S1 to S4
+
+
+7 December 2023
+Abhijeet, Sravani, Kapali 
+-----------------------------------------
+ 
+next week
+1. Timeline (chapters in your thesis/report) 
+	- Literature survey (Document / Presentation)
+	- Experiment design (Document / Presentation)
+		1. Wiring diagram 
+		2. Data flow diagram
+		3. Communication stack diagram
+	- Obervations (KTIs) (Document / Presentation)
+	- Algorithm I design (KTI -> Metrics) (Document / Presentation)
+	- Algorithm II design (Metrics -> Diagnosis) (Document / Presentation)
+	- Conclusion / Future work (Document / Presentation)
+	- Biobliograph (bibtex document) 
+23 Nov 2023
+Prof. Jagtap, Abhijeet, Sravani, Kapali 
+-------------------
+
+Doing today: 1. Testbed for generating training dataset 
+               - ACTION: Kapali to send code to IISc
+
+               : RaspberryPi connected to motor
+               : Laptop --Wifi--> Commands to RaspberryPi --> Commands to Motor --motor telmetry (WiFi)--> RaspberryPi
+                              : Trusted condition
+                              : Untrusted condition (Safety: unsafe events, Security: adversarial events, Reliabilty: faults, Resilience: ???)
+               : Identify possible data that can be collected 
+               : Determine useful information 
+                              :: Definition of useful information -> untrusted conditions.
+               : KTI --automation 1--> Metrics --automation 2--> Diagnosis (Safety, Security, Reliability, Resilience)
+                              :: KTI (RaspberryPi) == Memory(t), CPU(t), Temperature(t), Network activity(t), ??
+                              :: KTI (Motor) == Speed(t), temperature (t), network activity(t), ??
+
+TODO: 2. Algorithm Development Phases 
+               : Training dataset (Normal, Safety, Security, Reliability, Resilience) --IRL training--> Model
+               : KTI/Metrics --> prediction algorithm (Model) -> Predictions (Safety, Security, Reliability, Resilience) 
+               : Explainability
+                              :: How do we define explainability?
+                                             :: Diagnosis --traceability--> KTI/Metrics
+                              :: How do we demonstrate explainability for the prediction algorithm?
+                              
+TODO?: 3. How do we generalize the research results to arbitrary CPS?
+               : General workflow for developing IRL based trust score generation for arbitrary CPS
+
+
+2 Nov 2023
+Prof. Jagtap, Abhijeet, Sravani, Sayantan, Kapali 
+-------------------
+
+1. Plan of action 
+               - Create a testbed 
+                              : RaspberryPi controlling a DC motor over wireless network 
+                                             :: Over wireless network = easy to induce attacks as well as reliability issues (delays, jitter, package loss) 
+                              : Control loop is active during transient conditions but less active during steady state 
+                              : KTIs measured from inside the RaspberryPi device and sensors on the DC motor 
+                                             :: RaspberryPi device  KTIs = CPU, memory, network activity, temperature of CPU, and so on 
+                                             :: DC motor KTIs = voltage (in), RPM (out)
+                              ****** Interesting to see what comes out of it
+                              : Algorithmically compute (trust score, to indicate) how the KTIs affect safety, security and reliability of RaspberryPi device and, therefore, the DC motor 
+                                             :: Explainability of trust scores
+                                             :: Inverse Reinforcement Learning: expected outcome -> reward  
+                                                            ::: Reinforcement Learning : reward -> policy 
+                                                            ::: Helps in generating explainale trust scores 
+                              ******
+                              : The next step would be to model the attacker and then see if the KTIs can indicate  the presence of attack 
+               - Kapali: To see for getting python files generated by Abhijeet while at Siemens for collecting RaspberryPi device KTIs            
+
+2. Reference: https://users.ece.cmu.edu/~koopman/pubs/koopman07_dependability_everyday_embedded_abs.pdf
+               - Prof. Jagtap to share selected papers with Sayantan, Sravani and Kapali 
+               
+
+
+26 Oct 2023
+Prof. Jagtap, Abhijeet, Sravani, Sayantan, Kapali 
+-------------------
+
+0. Papers
+               - Restart-based mechanism to guarantee safety even in insecure states
+                              : Attacks that run infinite loops can heat up the processor => restart can mitigate the effects of the attack
+                              : Can we decide when to restart based on a trust score? How to identify the threshold of trust score?
+               - There are papers on trust score computation based on security metrics
+                              : We need to explore how to create a trust score that provides indication of safety and security state of a device 
+
+1. Plan of action
+               - Scope the dimension of trust that we shall measure
+                              - Formalism: (Device (agent) -> [Key-Trust Indicators (KTIs): Measurements(Time)] -> Trust score algorithm -> [Trust score: Information](Time)) 
+                                             : How to identify the KTIs?
+                                             : What KTIs may be collected for safety within a context? Each device will have its own KTIs?
+                                             : Consider single-application devices, which are common in OT world. 
+                                             : What can be (and cannot be) measured? 
+                                             : What can be (and cannot be) inferred or scored?
+                                                            :: Potentially useful tools: Statistical analysis (probabilistic risk enumeration, Bayesian updates), conformal predictions 
+                              - Explainability of trust scores: What inferences can an OT operator draw from such scores? 
+                                             : Traceability angle: KTI <-> Trust Score
+                                             : Decision-tree based systems
+                                             : Inverse neural networks (bijective I/O relationship)
+                              - There are only commercial products with secret algorithms and apparent lack of academic rigour
+                                             : https://learn.microsoft.com/en-us/azure/defender-for-iot/organizations/overview
+                                             : https://www.cisco.com/c/en/us/td/docs/cloud-systems-management/network-automation-and-management/dna-center/2-3-6/user_guide/b_cisco_dna_center_ug_2_3_6/endpoint-analytics-1-0.html
+                              - The correlation between insecure and unsafe states of a device 
+                                             : KTIs for device safety, KTIs for device security and how to combine them?
+                              - System: interconnection of devices 
+                                             1 : trust score for the device
+                                             2 : trust score for interconnection 
+                                             3 : trust score for the system 
+                              - Use cases:
+                                             - Electric Vehicle Charger 
+                                                            : [EV (safety)] <-Power- [Charger (safety)] <-Controlled (over OCPP/Internet)- [Charge Point Operator (CPO)]
+                                                            : How can the CPO infer the trustworthiness of the remote Charger and the EV connected to the charger?
+                              *** - What insecure and unsafe conditions can be simulated such that a trust score can indicate such conditions in a remote device?
+                                             Idea 1: Can Rodinia benchmarks be useful to create insecure and unsafe conditions? 
+                                                            :: https://ieeexplore.ieee.org/document/5306797
+                                             
+                                             Insecure states: breached previlege in the device, malware/virus, ....
+                                                            : What insecure state can be created in a RaspberryPi device?
+                                                            : We need to assume that insecure states are infinte 
+                                             Unsafe states: 
+                                             
+               - Pick a representative CPS using Raspberry PI devices where the device trustworthiness can be measured, scored and efficacy proved within the context of the CPS.
+               - Design device-trust-scoring algorithm
+
+
+26 Sep 2023
+Abhijeet, Sravani, Kapali 
+-------------------
+
+- Start date can be considered to be 1 August 2023
+- Agenda for this meeting
+               1. Agree on the problem statement
+               2. Plan of action 
+               3. Outcome forecast
+               4. Meeting rhythm
+               
+1. *Working* problem statement 
+The use of Industrial IoT (IIoT) devices in Cyberphysical Systems (CPS) is expected to increase. To automate asset 
+monitoring and zero-trust access control configurations, trustworthiness of IIoT devices needs to be measured, 
+scored, and tracked in a continuous manner. NIST describes trustworthy systems to be safe, secure (confidentiality, integrity, available), reliable, resilient and privacy-aware. Thus, a basic problem is how to measure and score trustworthiness of a computational 
+device?
+
+Unlike IT devices and IT systems, IIoT devices and CPS interact with their environment using sensors and actuators. 
+This requires them to respond to and service interrupts from either the real-world (via sensors) or their internal clocks 
+or network messages. The network interface of IIoT devices can be used to sabotage the functioning of the IIoT 
+devices, which in-turn can undermine the operations of the CPS. The reliability of the IIoT devices can also 
+undermine the operations of the CPS. Sabotage, device reliability and real-world events can cause safety issues in 
+the CPS. In order to monitor and control access to IIoT devices, it is essential to detect degradation of IIoT device 
+behaviour, which may be a consequence of security or reliability events. The goal of this thesis research would be to 
+define device trust metrics and score such that the score is simple and explainable to a human recipient (or user).
+
+- What is the concept of safety that we need to look at with respect to device trust scoring?
+- What is the sense with which we need to score the device? Is it the NFR of the device itself or is it the impact the device has on its environment?
+               = We are talking about the trust of the device only and not about the trust of the system, of which the device is a part.
+               = Device safety measures, for example, attempts to understand the safety of the device due to activities on or by the device. 
+                              : For example: run away programs (forever loops) could cause heating conditions and/or battery drain outcomes, which can affect the device safety itself -- it could go inoperational. 
+               = We could be more interested in safety of the device than safety due to the device. 
+               = Device can be modelled as INPUT -> Process -> OUTPUT
+                              : Malformed or crafted-packets could cause safety, security, reliability and resilience issues in the device.
+               = Device can also be modelled as an ensemble (HW/FW + OS + Software)
+               = The score is given to an instance of the device and not to the family of devices (or make-and-model of the device)
+                              : But, if we are taking device vulnerability reports as a Key Trust Indicator, then the score can affect all devices of that family 
+                              : But the impact of the vulnerability report on all devices in the family may not the same. 
+- Privacy is technically a traceability and correlation problem
+               = It can be defined for human beings as well as machines/devices 
+- What does device privacy mean? How to define that a device is privacy-aware?  
+               = For example: reverse engineering the process given the (INPUT, OUTPUT) pair may suggest privacy
+               = There are at least two stakeholders for a IIoT device: manufacturer and user
+               = How to define privacy from both perspectives? 
+               
+2. Plan of action
+               - Scope the dimension of trust that we shall measure
+               - Pick a representative CPS using Raspberry PI devices where the device trustworthiness can be measured, scored and efficacy proved within the context of the CPS.
+               - Design device-trust-scoring algorithm
+
+3 Outcome forecast
+               - This can be done after a few meetings
+               
+4. Rhythm meeting schedule
+               - Already set
