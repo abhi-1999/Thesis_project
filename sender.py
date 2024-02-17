@@ -4,24 +4,33 @@ import psutil
 import rclpy
 from std_msgs.msg import Float32
 from rclpy.node import Node
+import csv
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 
 class Computation:
     def __init__(self):
         self.target = 30
+
         self.kp = 2.5   #2.5
         self.kd = 0.015  #0.01
         self.ki = 0.4   #0.2
+
         self.eprev = 0
         self.eintegral = 0
         self.prevT = 0
         self.prevPosition_L = 0
+
+        self.counter = 0
+        self.data_points=[]
+        self.glob_time = time.time()
+
         self.packets_sent_start = psutil.net_io_counters().packets_sent
         self.packets_recv_start = psutil.net_io_counters().packets_recv
+        
 
     
-    def get_system_info(self):
+    def get_system_info(self, control_cmd_sent, encoder_pos):
         cpu_usage = psutil.cpu_percent()
         memory_usage = psutil.virtual_memory().percent
         net_io = psutil.net_io_counters()
@@ -35,8 +44,27 @@ class Computation:
             temperatures = psutil.sensors_temperatures() 
             if "coretemp" in temperatures:
                   temp = temperatures["coretemp"][0].current
+        time_stamp = time.time() - self.glob_time 
+        if self.counter <= 1000:
+            self.data_points.append([time_stamp, cpu_usage, memory_usage, control_cmd_sent, encoder_pos, temp, packets_sent, packets_recv])
+            print(f"Iteration: {self.counter}| Time stamp: {time_stamp}| CPU Usage: {cpu_usage}% | Memory Usage: {memory_usage}% | CPU Temperature: {temp} °C|Packets sent: {packets_sent}| Packets received: {packets_recv}")
+        else:
+            print("here")
+            csv_filename = "system_info.csv"
+            with open(csv_filename, 'w', newline='') as csvfile:
+                csv_writer = csv.writer(csvfile)
+                csv_writer.writerow(["Time stamp",  "CPU Usage", "Memory Usage","Control command sent","Encoder position", "CPU Temperature", "Packets sent", "Packets received", ])
+                csv_writer.writerows(self.data_points)
+            print("done")
+            rclpy.shutdown()
+            print("shutdown signal")
+            
+            
+
+        self.counter += 1
+
         
-        return cpu_usage, memory_usage, temp, packets_sent, packets_recv
+        # return cpu_usage, memory_usage, temp, packets_sent, packets_recv
     
     def control_logic(self, current_position_L):
         t = time.time()
@@ -61,17 +89,15 @@ class Computation:
 
 class MyNode(Node):
     def __init__(self):
-        super().__init__("PC_node")
-        
-        self.glob_time = time.time()
-        self.counter = 0
+        super().__init__("PC_node")    
+       
         qos_policy = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
             history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
+            depth=3
         )
 
-        self.cmd_ctrl_pub = self.create_publisher(Float32, "micro_ros_esp_sub", 1)
+        self.cmd_ctrl_pub = self.create_publisher(Float32, "micro_ros_esp_sub", 3)
         self.subscription = self.create_subscription(Float32, "micro_ros_esp_pub", self.listener_callback, qos_profile=qos_policy)
 
         self.get_logger().info("PC_node has started")
@@ -86,16 +112,17 @@ class MyNode(Node):
         u = self.computation.control_logic(msg.data)
         
 
-        cpu_usage, memory_usage, temperature, packets_sent, packets_recv = self.computation.get_system_info()
-        time_stamp = time.time() - self.glob_time 
+        self.computation.get_system_info(u, msg.data)
+        
 
-        print(f"Iteration: {self.counter}| Time stamp: {time_stamp}| CPU Usage: {cpu_usage}% | Memory Usage: {memory_usage}% | CPU Temperature: {temperature} °C|Packets sent: {packets_sent}| Packets received: {packets_recv}")
-        self.counter += 1
+        # print(f"Iteration: {self.counter}| Time stamp: {time_stamp}| CPU Usage: {cpu_usage}% | Memory Usage: {memory_usage}% | CPU Temperature: {temperature} °C|Packets sent: {packets_sent}| Packets received: {packets_recv}")
+        # self.counter += 1
 
         new_msg = Float32()
         new_msg.data = u
         self.cmd_ctrl_pub.publish(new_msg)
         print(time.time() - t)
+        print("-------------------------------------")
 
 
 def main(args=None):
@@ -103,7 +130,9 @@ def main(args=None):
     node = MyNode()
     node.computation = Computation()  # Initialize Computation class
     rclpy.spin(node)
+    print("HERE")
     rclpy.shutdown()
+    print("ALSO HERE")
 
 if __name__ == '__main__':
     main()
